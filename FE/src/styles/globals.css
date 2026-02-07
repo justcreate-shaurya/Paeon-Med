@@ -1,5 +1,13 @@
 @custom-variant dark (&:is(.dark *));
 
+/* Source Sans Pro font support */
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-weight: 100 900;
+  font-style: normal;
+  src: local('Source Sans Pro'), local('-apple-system'), local('BlinkMacSystemFont');
+}
+
 :root {
   --font-size: 16px;
   --background: #ffffff;
@@ -126,6 +134,7 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Source Sans Pro', -apple-system, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
