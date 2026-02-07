@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mic, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface CommandCenterProps {
@@ -10,7 +10,6 @@ interface CommandCenterProps {
 }
 
 export function CommandCenter({ onSearch, isActive, currentDrug, isExpanded = false }: CommandCenterProps) {
-  const [isListening, setIsListening] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,27 +76,7 @@ export function CommandCenter({ onSearch, isActive, currentDrug, isExpanded = fa
               />
 
               {/* Action Bar */}
-              <div className="mt-4 flex items-center justify-between">
-                {/* Left: Voice Input */}
-                <motion.button
-                  type="button"
-                  onClick={() => setIsListening(!isListening)}
-                  className="flex items-center gap-2 rounded-full px-5 py-2.5"
-                  style={{
-                    background: isListening
-                      ? 'linear-gradient(135deg, #1976D2 0%, #42A5F5 100%)'
-                      : 'rgba(0, 0, 0, 0.05)',
-                    color: isListening ? 'white' : 'rgba(0, 0, 0, 0.6)',
-                    fontFamily: 'Source Sans Pro, -apple-system, system-ui, sans-serif',
-                    fontWeight: 600,
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Mic size={16} strokeWidth={2} />
-                  <span className="text-sm">{isListening ? 'Listening...' : 'Use Voice'}</span>
-                </motion.button>
-
+              <div className="mt-4 flex items-center justify-end">
                 {/* Right: Send Button */}
                 <motion.button
                   type="submit"
@@ -168,79 +147,6 @@ export function CommandCenter({ onSearch, isActive, currentDrug, isExpanded = fa
 
         {/* Right: Action Buttons */}
         <div className="flex items-center gap-3">
-          {/* Audio Waveform Visualization */}
-          {isListening && (
-            <div className="flex items-center gap-1">
-              {[...Array(4)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-1 rounded-full"
-                  style={{ background: '#1976D2' }}
-                  animate={{
-                    height: [8, 20, 8],
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: 'easeInOut',
-                  }}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Mic Button */}
-          <motion.button
-            type="button"
-            onClick={() => setIsListening(!isListening)}
-            className="relative flex h-12 w-12 items-center justify-center rounded-full"
-            style={{
-              background: isListening 
-                ? 'linear-gradient(135deg, #1976D2 0%, #42A5F5 100%)'
-                : 'rgba(255, 255, 255, 0.5)',
-              boxShadow: isListening 
-                ? '0 0 0 6px rgba(25, 118, 210, 0.15), 0 6px 20px rgba(25, 118, 210, 0.3)'
-                : '0 2px 12px rgba(0, 0, 0, 0.08)',
-              border: isListening ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            animate={isListening ? {
-              scale: [1, 1.08, 1],
-            } : {}}
-            transition={{
-              duration: 1.5,
-              repeat: isListening ? Infinity : 0,
-              ease: 'easeInOut',
-            }}
-          >
-            <Mic 
-              size={20} 
-              strokeWidth={2} 
-              className={isListening ? 'text-white' : 'text-black/50'}
-            />
-            
-            {/* Pulse Ring */}
-            {isListening && (
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  border: '2px solid #1976D2',
-                }}
-                animate={{
-                  scale: [1, 1.6],
-                  opacity: [0.6, 0],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeOut',
-                }}
-              />
-            )}
-          </motion.button>
-
           {/* Send Button */}
           <motion.button
             type="submit"

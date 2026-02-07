@@ -17,24 +17,6 @@ const GRADIENT_COLOR_MAP: Record<string, string> = {
   'deep_blue': '#0033A0',
   'orange': '#D51900',
 };
-=======
-import ciplaLogo from '../assets/Cipla.png';
-import jjLogo from '../assets/jnj.png';
-import pfizerLogo from '../assets/pfizer.png';
-
-/** Map company name → local logo asset */
-const LOGO_MAP: Record<string, string> = {
-  'Cipla': ciplaLogo,
-  'Pfizer': pfizerLogo,
-  'Johnson & Johnson': jjLogo,
-};
-
-/** Map backend background_gradient token → CSS gradient color */
-const GRADIENT_COLOR_MAP: Record<string, string> = {
-  'light_blue': '#00AEEF',
-  'deep_blue': '#0033A0',
-  'orange': '#D51900',
-};
 
 interface IntelligentHeaderProps {
   brand?: {
@@ -73,26 +55,6 @@ export function IntelligentHeader({ brand, company, drugName }: IntelligentHeade
 
   // Darker gradient for Cipla
   const isCipla = effectiveBrand.name === 'Cipla';
-=======
-  // Provide defaults for unknown drugs (no brand in brands.json)
-  const effectiveBrand = brand || {
-    name: '',
-    color: '#1976D2',
-    tagline: '',
-    division: undefined,
-    background_gradient: undefined,
-  };
-
-  // Use background_gradient token if available, else fall back to brand.color
-  const gradientBase = effectiveBrand.background_gradient
-    ? (GRADIENT_COLOR_MAP[effectiveBrand.background_gradient] || effectiveBrand.color)
-    : effectiveBrand.color;
-
-  // Resolve logo from company name
-  const logoSrc = LOGO_MAP[effectiveBrand.name] || null;
-
-  // Darker gradient for Cipla
-  const isCipla = effectiveBrand.name === 'Cipla';
   const gradientOpacity = isCipla 
     ? { start: '', mid1: 'dd', mid2: '88', end: '40' } 
     : { start: 'ee', mid1: '99', mid2: '70', end: '40' };
@@ -101,7 +63,7 @@ export function IntelligentHeader({ brand, company, drugName }: IntelligentHeade
     <motion.div 
       className="relative w-full overflow-hidden"
       style={{
-        background: `linear-gradient(180deg, ${gradientBase}${gradientOpacity.start} 0%, ${gradientBase}${gradientOpacity.mid1} 40%, ${gradientBase}${gradientOpacity.mid2} 70%, ${gradientBase}${gradientOpacity.end} 90%, #F5F5F7 100%)`
+        background: `linear-gradient(180deg, ${gradientBase}${gradientOpacity.start} 0%, ${gradientBase}${gradientOpacity.mid1} 40%, ${gradientBase}${gradientOpacity.mid2} 70%, ${gradientBase}${gradientOpacity.end} 90%, #F5F5F7 100%)`,
         minHeight: '1000px',
       }}
       initial={{ opacity: 0 }}

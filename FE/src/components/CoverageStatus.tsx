@@ -26,32 +26,6 @@ export function CoverageStatus({ coverageData }: CoverageStatusProps) {
   if (!coverageData) return null;
 
   const getIconAndStyle = (baseColor: string) => {
-=======
-interface CoverageScheme {
-  status: string;
-  color: string;
-  label: string;
-}
-
-interface CoverageStatusProps {
-  coverageData?: {
-    government: CoverageScheme | null;
-    corporate: CoverageScheme | null;
-    private: CoverageScheme | null;
-  };
-}
-
-/** Scheme display names matching the backend locked mapping */
-const SCHEME_TITLES: Record<string, { title: string; scheme: string }> = {
-  government: { title: 'Government Schemes', scheme: 'Ayushman Bharat' },
-  corporate: { title: 'Corporate', scheme: 'CGHS' },
-  private: { title: 'Private TPA', scheme: 'Private Insurance' },
-};
-
-export function CoverageStatus({ coverageData }: CoverageStatusProps) {
-  if (!coverageData) return null;
-
-  const getIconAndStyle = (baseColor: string) => {
     const colorMap: Record<string, { bg: string; text: string; glow: string; icon: any }> = {
       'green': {
         bg: 'rgba(46, 125, 50, 0.15)',

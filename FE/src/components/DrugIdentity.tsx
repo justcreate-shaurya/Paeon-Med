@@ -12,20 +12,6 @@ interface DrugIdentityProps {
 
 export function DrugIdentity({ drugDisplay, brandColor, brandName }: DrugIdentityProps) {
   if (!drugDisplay) return null;
-=======
-
-interface DrugIdentityProps {
-  drugDisplay?: {
-    name: string;
-    subtitle?: string | null;
-    description?: string | null;
-  };
-  brandColor: string;
-  brandName: string;
-}
-
-export function DrugIdentity({ drugDisplay, brandColor, brandName }: DrugIdentityProps) {
-  if (!drugDisplay) return null;
 
   return (
     <motion.div 
