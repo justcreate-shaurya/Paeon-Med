@@ -44,7 +44,7 @@ function resample(input: Float32Array, fromRate: number, toRate: number): Float3
 // ── Constants ───────────────────────────────────────────────
 const SAMPLE_RATE = 8000;
 const CHUNK_SIZE = 160; // 20ms at 8kHz — matches Twilio
-const NOISE_GATE = 0.008; // RMS threshold for noise gating
+const NOISE_GATE = 0.015; // RMS threshold for noise gating (higher = less noise sensitive)
 
 export interface CallAgentState {
   isConnected: boolean;
@@ -404,7 +404,17 @@ export function useCallAgent(config: CallAgentConfig = {}) {
   const toggleMic = useCallback(() => {
     if (!activeRef.current) return;
     micEnabledRef.current = !micEnabledRef.current;
+    
+    // Actually enable/disable the mic track to stop capturing
+    const stream = micStreamRef.current;
+    if (stream) {
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = micEnabledRef.current;
+      });
+    }
+    
     updateState({ isMicEnabled: micEnabledRef.current });
+    console.log(`[CallAgent] Mic ${micEnabledRef.current ? 'enabled' : 'muted'}`);
   }, [updateState]);
 
   // Cleanup on unmount

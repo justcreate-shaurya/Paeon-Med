@@ -23,9 +23,9 @@ const {
 
 // ── Tunables ─────────────────────────────────────────────────
 
-const ENERGY_THRESHOLD      = 180;   // min RMS to count as speech
+const ENERGY_THRESHOLD      = 350;   // min RMS to count as speech (higher = less noise sensitive)
 const SILENCE_TRIGGER_MS    = 1500;  // silence duration to trigger processing
-const MIN_SPEECH_MS         = 400;   // ignore sub-400ms bursts
+const MIN_SPEECH_MS         = 500;   // ignore sub-500ms bursts (filters short noise)
 const MIN_AUDIO_BYTES       = 2400;  // ~0.3 s at 8 kHz mulaw
 const THINKING_PAUSE_MS     = 350;   // pause before AI speaks
 const SAMPLE_RATE           = 8000;
