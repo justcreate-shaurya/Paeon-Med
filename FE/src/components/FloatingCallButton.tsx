@@ -1,38 +1,50 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCallAgent } from '../hooks/useCallAgent';
 
 export function FloatingCallButton() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { state, startCall, endCall, toggleMic } = useCallAgent({
-    serverUrl: `ws://${window.location.hostname}:3000/media-stream`,
-    onStatusChange: (status) => {
-      console.log('[Call Status]', status);
-    },
-    onError: (error) => {
-      console.error('[Call Error]', error);
-    },
-  });
 
-  const handleStartCall = async () => {
+  // Memoize callbacks to prevent re-renders
+  const onStatusChange = useCallback((status: string) => {
+    console.log('[Call Status]', status);
+  }, []);
+
+  const onError = useCallback((error: string) => {
+    console.error('[Call Error]', error);
+  }, []);
+
+  // Memoize config to prevent hook re-initialization
+  const config = useMemo(
+    () => ({
+      serverUrl: `ws://${window.location.hostname}:3001/media-stream`,
+      onStatusChange,
+      onError,
+    }),
+    [onStatusChange, onError]
+  );
+
+  const { state, startCall, endCall, toggleMic } = useCallAgent(config);
+
+  const handleStartCall = useCallback(async () => {
     try {
       await startCall();
     } catch (err) {
       console.error('Failed to start call:', err);
     }
-  };
+  }, [startCall]);
 
-  const handleEndCall = () => {
+  const handleEndCall = useCallback(() => {
     endCall();
     setIsExpanded(false);
-  };
+  }, [endCall]);
 
-  const handleToggleExpand = () => {
+  const handleToggleExpand = useCallback(() => {
     if (!isExpanded) {
       setIsExpanded(true);
     }
-  };
+  }, [isExpanded]);
 
   return (
     <AnimatePresence>

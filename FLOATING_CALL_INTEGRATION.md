@@ -92,7 +92,7 @@ If your calling agent is on a different machine or port, update the `serverUrl` 
 
 ```tsx
 const { state, startCall, endCall, toggleMic } = useCallAgent({
-  serverUrl: `ws://YOUR_SERVER_IP:3000/media-stream`,
+  serverUrl: `ws://YOUR_SERVER_IP:3001/media-stream`,
   // ... rest of config
 });
 ```

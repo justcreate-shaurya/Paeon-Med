@@ -339,17 +339,84 @@ async function reason(query, conversationHistory = []) {
 }
 
 // ── Text-to-Speech (Google Cloud TTS) ────────────────────────
-// Returns mulaw 8kHz audio directly — no resampling needed.
-// This eliminates the 24kHz→8kHz conversion step entirely.
+// Uses 24kHz LINEAR16 for highest quality from Neural2 voices,
+// then downsamples to 8kHz mulaw for Twilio compatibility.
 // https://cloud.google.com/text-to-speech/docs/create-audio
 
 const MAX_TTS_LENGTH = 5000; // Google TTS limit per request
+const TTS_SAMPLE_RATE = 24000; // Native rate for Neural2 voices
+const OUTPUT_SAMPLE_RATE = 8000; // Twilio/browser output rate
+
+/**
+ * High-quality resampler with proper anti-aliasing.
+ * Uses a windowed sinc filter for better quality than simple averaging.
+ * @param {Buffer} pcm24k - 16-bit PCM at 24kHz
+ * @returns {Buffer} mulaw at 8kHz
+ */
+function highQualityResample(pcm24k) {
+  if (!pcm24k || pcm24k.length < 6) return Buffer.alloc(0);
+  
+  const ratio = TTS_SAMPLE_RATE / OUTPUT_SAMPLE_RATE; // 3:1
+  const inSamples = pcm24k.length / 2;
+  const outSamples = Math.floor(inSamples / ratio);
+  const mulaw = Buffer.alloc(outSamples);
+  
+  // Low-pass filter coefficients (6-tap windowed sinc for 3:1 decimation)
+  // Cutoff at ~3.5kHz to prevent aliasing while preserving speech clarity
+  const filterTaps = [0.05, 0.15, 0.30, 0.30, 0.15, 0.05];
+  const filterLen = filterTaps.length;
+  const halfFilter = Math.floor(filterLen / 2);
+  
+  for (let i = 0; i < outSamples; i++) {
+    const center = Math.floor(i * ratio);
+    let sum = 0;
+    let weightSum = 0;
+    
+    // Apply FIR filter
+    for (let j = 0; j < filterLen; j++) {
+      const srcIdx = center - halfFilter + j;
+      if (srcIdx >= 0 && srcIdx < inSamples) {
+        const sample = pcm24k.readInt16LE(srcIdx * 2);
+        sum += sample * filterTaps[j];
+        weightSum += filterTaps[j];
+      }
+    }
+    
+    // Normalize and clamp
+    const filtered = Math.round(sum / weightSum);
+    const clamped = Math.max(-32768, Math.min(32767, filtered));
+    
+    // Convert to mulaw
+    mulaw[i] = linearToMulaw(clamped);
+  }
+  
+  return mulaw;
+}
+
+// Mulaw encoding (inline for performance)
+const MULAW_BIAS = 0x84;
+const MULAW_MAX_VAL = 32635;
+
+function linearToMulaw(sample) {
+  let sign = 0;
+  if (sample < 0) { sign = 0x80; sample = -sample; }
+  if (sample > MULAW_MAX_VAL) sample = MULAW_MAX_VAL;
+  sample += MULAW_BIAS;
+  
+  let exponent = 7;
+  let mask = 0x4000;
+  while (!(sample & mask) && exponent > 0) { exponent--; mask >>= 1; }
+  
+  const mantissa = (sample >> (exponent + 3)) & 0x0f;
+  return ~(sign | (exponent << 4) | mantissa) & 0xff;
+}
 
 /**
  * Synthesize text → mulaw audio buffer (8 kHz, mono).
+ * Uses 24kHz LINEAR16 from TTS then high-quality downsampling.
  * @param {string} text — text to speak
  * @param {string} langCode — ISO-639-1 language code (e.g. 'en', 'hi')
- * @returns {Buffer} mulaw audio buffer ready for Twilio
+ * @returns {Buffer} mulaw audio buffer ready for Twilio/browser
  */
 async function synthesize(text, langCode = 'en') {
   if (!text || !text.trim()) return Buffer.alloc(0);
@@ -370,12 +437,17 @@ async function synthesize(text, langCode = 'en') {
         ssmlGender: voiceConfig.ssmlGender,
       },
       audioConfig: {
-        // Output mulaw 8kHz directly — matches Twilio's expected format.
-        // No intermediate PCM conversion or resampling needed.
-        audioEncoding: 'MULAW',
-        sampleRateHertz: 8000,
-        // Slight speed boost for more natural phone conversation pace
+        // Use LINEAR16 at 24kHz for highest quality from Neural2 voices
+        // Then downsample with proper anti-aliasing filter
+        audioEncoding: 'LINEAR16',
+        sampleRateHertz: TTS_SAMPLE_RATE,
+        // Optimized for natural phone conversation
         speakingRate: 1.0,
+        pitch: 0.0,
+        // Boost volume slightly for clarity
+        volumeGainDb: 2.0,
+        // Add audio effects for warmer, more natural sound
+        effectsProfileId: ['telephony-class-application'],
       },
     });
     return response;
@@ -383,7 +455,10 @@ async function synthesize(text, langCode = 'en') {
 
   // Google TTS returns audioContent as a Buffer (or Uint8Array)
   if (!result.audioContent) return Buffer.alloc(0);
-  return Buffer.from(result.audioContent);
+  
+  // High-quality resample from 24kHz LINEAR16 to 8kHz mulaw
+  const pcm24k = Buffer.from(result.audioContent);
+  return highQualityResample(pcm24k);
 }
 
 // ── Exports ──────────────────────────────────────────────────
